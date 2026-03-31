@@ -22,13 +22,13 @@
 import numpy as np
 from .Utils.filter_tracks import filter_short, filter_end_to_end_disp
 from .Utils.io_utils import read_labels_from_txt#, save_json_traj, save_json_zones
-import average_traj
+from .average_traj.trajectory_analysis import create_expected_trajectories
 from .detect_occlusion.auto_occlusion_detect import occlusion_clustering
 from .group_trajectories.Generate_track_zones import get_sink_source
 
 class Trajectory_Initialisation:
     def __init__(self, label_path, video_path, video_fps=15, min_time_in_scene=3, img_size=(3840, 2160)):
-        traj_dict = read_labels_from_txt(label_path)
+        _, traj_dict = read_labels_from_txt(label_path)
         self.traj_dict = traj_dict
         self.video_path = video_path
         self.video_fps = video_fps
@@ -47,7 +47,7 @@ class Trajectory_Initialisation:
         zones, clusters = get_sink_source(valid_dict) # get entry and exit zones from valid tracks
         
         zone_dict = {"source/sink_pairs": zones, "occ_zones": occ_zones}
-        average_trajs = average_traj.create_expected_trajectories(clusters, zone_dict) # average common trajectories and apply local occlusion to them
+        average_trajs = create_expected_trajectories(clusters, zone_dict) # average common trajectories and apply local occlusion to them
         
         self.traj_dict = average_trajs
         self.zones = zones

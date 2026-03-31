@@ -110,6 +110,7 @@ def is_within(xy, polygons):
 def crop_img(traj_dict, video_path, img_size=(3840, 2160)):
     import cv2
     cap = cv2.VideoCapture(video_path)
+    # print(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
 
     for track_id, track_info in traj_dict.items():
         track_info['crops'] = [[], []] # start and end crop
@@ -120,7 +121,7 @@ def crop_img(traj_dict, video_path, img_size=(3840, 2160)):
                 index = -1
             frame = track_info['frames'][index]
 
-            index_cap = cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
+            index_cap = cap.set(cv2.CAP_PROP_POS_FRAMES, frame-1) 
             ret, img = cap.read()
             if not ret:
                 raise ValueError(f"Could not read frame {frame} for track {track_id}, please ensure correct video and labels")

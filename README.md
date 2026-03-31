@@ -12,6 +12,13 @@ TrajectoryInit is a Python package for initializing trajectory priors from MOT t
 
 ### Poetry (recommended)
 
+Choose compatible version for your system from https://download.pytorch.org and replace the source link
+```bash
+poetry source add --priority=explicit pytorch-gpu https://download.pytorch.org/whl/cu128
+
+poetry lock
+```
+
 ```bash
 poetry install
 ```

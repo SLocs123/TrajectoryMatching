@@ -6,8 +6,8 @@
 
 import os
 
-from fastreid.data.datasets import DATASET_REGISTRY
-from fastreid.data.datasets.bases import ImageDataset
+from ...data.datasets import DATASET_REGISTRY
+from ...data.datasets.bases import ImageDataset
 
 __all__ = ['Shinpuhkan', ]
 

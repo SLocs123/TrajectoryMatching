@@ -5,8 +5,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Annotated
 
 class Reid_config(BaseModel):
-    reid_config_path: str = 'sbs_R50-ibn.yml'
-    reid_weight: str = 'sbs_model.pth'
+    reid_config_path: str = 'src/Trajectory_Matching/feature_extractor/sbs_R50-ibn.yml'
+    reid_weight: str = 'src/Trajectory_Matching/feature_extractor/market_sbs_R50-ibn.pth'
     reid_device: str = 'cuda'  # or 'cpu' or dla0
 
 class RedisConfig(BaseModel):

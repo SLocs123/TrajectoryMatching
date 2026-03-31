@@ -16,10 +16,10 @@ if TORCH_MAJOR == 1 and TORCH_MINOR < 8:
 else:
     string_classes = str
 
-from collections import Mapping
+from collections.abc import Mapping
 
-from fastreid.config import configurable
-from fastreid.utils import comm
+from ..config import configurable
+from ..utils import comm
 from . import samplers
 from .common import CommDataset
 from .data_utils import DataLoaderX

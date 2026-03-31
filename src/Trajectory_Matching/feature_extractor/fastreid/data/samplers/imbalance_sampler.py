@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from torch.utils.data.sampler import Sampler
 
-from fastreid.utils import comm
+from ...utils import comm
 
 
 class ImbalancedDatasetSampler(Sampler):

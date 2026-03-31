@@ -13,9 +13,9 @@ import math
 import torch
 import torch.nn as nn
 
-from fastreid.layers import *
-from fastreid.utils import comm
-from fastreid.utils.checkpoint import get_missing_parameters_message, get_unexpected_parameters_message
+from ...layers import *
+from ...utils import comm
+from ...utils.checkpoint import get_missing_parameters_message, get_unexpected_parameters_message
 from .build import BACKBONE_REGISTRY
 
 logger = logging.getLogger(__name__)

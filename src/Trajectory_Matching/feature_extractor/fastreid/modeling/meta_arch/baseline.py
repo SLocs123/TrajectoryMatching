@@ -7,10 +7,10 @@
 import torch
 from torch import nn
 
-from fastreid.config import configurable
-from fastreid.modeling.backbones import build_backbone
-from fastreid.modeling.heads import build_heads
-from fastreid.modeling.losses import *
+from ...config import configurable
+from ...modeling.backbones import build_backbone
+from ...modeling.heads import build_heads
+from ...modeling.losses import *
 from .build import META_ARCH_REGISTRY
 
 

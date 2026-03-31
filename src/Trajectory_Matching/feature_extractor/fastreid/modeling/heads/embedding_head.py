@@ -8,10 +8,10 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from fastreid.config import configurable
-from fastreid.layers import *
-from fastreid.layers import pooling, any_softmax
-from fastreid.layers.weight_init import weights_init_kaiming
+from ...config import configurable
+from ...layers import *
+from ...layers import pooling, any_softmax
+from ...layers.weight_init import weights_init_kaiming
 from .build import REID_HEADS_REGISTRY
 
 

@@ -4,9 +4,17 @@
 # Using segmentation to detect covered roads and existing tracks to find frequently dropped tracks should be enough to auto detect occlusion zones
 # This script will runn sem seg and using label tracks to find occlusion.
 # Previous broken track code will identify lost tracks, we can then run clustering on the end/start points to find zones, should not pass broken tracks that are too small
+
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+import cv2
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Iterable
-from ..Utils.utils import draw_box
+from typing import List, Tuple, Dict, Iterable, Any
+from Trajectory_Matching.Utils.utils import draw_box
+from Trajectory_Matching.feature_extractor.config import FeatureExtrator, Reid_config
+from Trajectory_Matching.feature_extractor.extractor import Extractor
+from Trajectory_Matching.Utils.utils import crop_img
 
 Point = Tuple[float, float]
 Box = Tuple[float, float, float, float]
@@ -42,7 +50,7 @@ def build_link_records(
 
 def occlusion_clustering(traj_dict, video_path):
     """ Atempts to associate start and end points to get an occlusion distance, can then be combines with sementation to build a zone"""
-    from src.Trajectory_Matching.detect_occlusion.track_re_link import _sct_rematch_process
+    from Trajectory_Matching.detect_occlusion.track_re_link import _sct_rematch_process
     
     traj_dict = apply_appearance_features(traj_dict, video_path) 
     valid_dict, broken_dict, matched_pairs = _sct_rematch_process(traj_dict) # , apply_relink=False: if you are limited on valid tracks, apply relink to rebuild broken tracks and increase sample size(yet to implement)
@@ -86,11 +94,11 @@ def zones_construction(broken_tracks: Dict[str, dict], matches: List[dict]) -> L
 def apply_appearance_features(traj_dict, video_path):
     # for each track, extract appearance features using a pretrained model, e.g. resnet50, and store in traj_dict
     # can use the start and end appearance as a simple representation of the track's appearance, or can use a more complex representation if needed
-    from feature_extractor.config import FeatureExtrator, Reid_config
-    from feature_extractor.extractor import Extractor
-    from src.Trajectory_Matching.Utils.utils import crop_img
+
     
-    crop_img(traj_dict, video_path) # crop the video frames to get the appearance of the track, can be done in parallel to speed up
+    crop_img(traj_dict, video_path) # crop the video frames to get the appearance of the track
+    # save_tracks_manifest_simple(traj_dict, out_dir="temp/appearance_features") 
+      
     settings = FeatureExtrator(reid_config=Reid_config())
     extractor = Extractor(settings)
     traj_dict = extractor._create_input4embed(traj_dict) # create input for embedding from the image dictionary, and store the features in traj_dict
@@ -177,7 +185,70 @@ def segmentation(image, boxes):
     # it still doesnt defferentiate between foreground and background objects
     # meaning all objects of significant height would be detected and not just objects blocking the road
     # may be best to just stick to box refining as defined above
-    
-    
-# def detect_missing_road(mask, tracks):
-#     """tries to detect points where road is likely being occluded by forground objects"""
+
+
+def save_tracks_manifest_simple(
+    traj_dict: Dict[Any, Dict[str, Any]],
+    out_dir: str = "temp",
+    crop_format: str = "jpg",
+) -> str:
+    """
+    Saves a single JSON file with schema:
+
+    {
+      "<track_id>": {
+        "frames": [...],
+        "trajectory": [[x,y], ...],
+        "crop_paths": ["<track_id>/crop_000.jpg", "<track_id>/crop_001.jpg", ...]
+      },
+      ...
+    }
+
+    Also writes crops to:
+      temp/<track_id>/crop_000.jpg, crop_001.jpg, ...
+    """
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    manifest: Dict[str, Dict[str, Any]] = {}
+
+    for track_id, track_info in traj_dict.items():
+        tid = str(track_id)
+
+        frames = track_info.get("frames", [])
+        trajectory = track_info.get("trajectory", [])
+        crops = track_info.get("crops", [])
+
+        # JSON-safe conversions
+        frames_json: List[int] = [int(f) for f in frames]
+        trajectory_json: List[List[float]] = [[float(x), float(y)] for (x, y) in trajectory]
+
+        track_dir = out_path / tid
+        track_dir.mkdir(parents=True, exist_ok=True)
+
+        crop_paths: List[str] = []
+        for i, img in enumerate(list(crops)):
+            if img is None:
+                continue
+
+            crop_name = f"crop_{i:03d}.{crop_format}"
+            crop_path = track_dir / crop_name
+
+            ok = cv2.imwrite(str(crop_path), img)
+            if not ok:
+                raise RuntimeError(f"Failed to write crop image: {crop_path}")
+
+            # Store RELATIVE path (relative to out_dir) so it works when you mount/move the folder
+            crop_paths.append(str(Path(tid) / crop_name))   
+
+        manifest[tid] = {
+            "frames": frames_json,
+            "trajectory": trajectory_json,
+            "crop_paths": crop_paths,
+        }
+
+    manifest_path = out_path / "manifest.json"
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+
+    return str(manifest_path)
