@@ -1,3 +1,4 @@
 src/Trajectory_Matching/feature_extractor/*.pth
 data/*
 test_ideas
+!data/.gitkeep
