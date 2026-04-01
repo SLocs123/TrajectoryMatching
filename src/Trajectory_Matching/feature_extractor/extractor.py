@@ -2,6 +2,7 @@ import cv2
 import torch
 import time
 import threading
+import numpy as np
 
 # import sys
 # sys.path.append("./feature_extractor/fast_reid/fastreid")
@@ -41,6 +42,7 @@ class Extractor:
         for key in keys:
             imgs = trajectory_dict[key]['crops']  # Assuming trajectory_dict[key] is a list of (image, confidence, frame_id, ...)
             for img in imgs:
+                img = cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_COLOR)
                 img = cv2.resize(img, (w, h), interpolation=cv2.INTER_CUBIC)
                 img = torch.from_numpy(img.astype("float32").transpose(2, 0, 1))  # CHW, torch.Tensor
                 img_list.append(img)
