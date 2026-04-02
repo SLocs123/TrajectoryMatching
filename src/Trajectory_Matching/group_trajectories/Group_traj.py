@@ -1,10 +1,11 @@
 import numpy as np
 from numba import njit, prange
 import numpy.typing as npt
+from shapely import LineString, frechet_distance
 
 FloatArray = npt.NDArray[np.float64]
 
-def group_trajectories(traj_dict, frechet_threshold=100): # threshold should be in pixels, 0.5 is invalid, test required start with 100
+def group_trajectories(traj_dict, frechet_threshold=100): # need to adjust this to ensure it represents the output scale
     # group trajectories based on frechet distance, using a threshold to determine if they belong to the same group
     traj_ids = list(traj_dict.keys())
     traj_coords = [traj_dict[tid]['trajectory'] for tid in traj_ids]
@@ -16,14 +17,14 @@ def group_trajectories(traj_dict, frechet_threshold=100): # threshold should be 
     for i in range(n):
         if traj_ids[i] in visited:
             continue
-        group = [traj_ids[i]]
+        group = [traj_dict[traj_ids[i]]['trajectory']]
         visited.add(traj_ids[i])
         for j in range(i+1, n):
             if traj_ids[j] in visited:
                 continue
-            dist = frechet_distance(traj_coords[i], traj_coords[j])
+            dist = shapely_frechet_dist(traj_coords[i], traj_coords[j])
             if dist < frechet_threshold:
-                group.append(traj_ids[j])
+                group.append(traj_dict[traj_ids[j]]['trajectory'])
                 visited.add(traj_ids[j])
         groups.append(group)
     
@@ -52,3 +53,9 @@ def frechet_distance_old(true_coords, pred_coords):
             cost[i, j] = max(prev, dist[i, j])
 
     return cost[n - 1, m - 1]
+
+
+def shapely_frechet_dist(coords1, coords2):
+    line1 = LineString(coords1)
+    line2 = LineString(coords2)
+    return frechet_distance(line1, line2, densify=0.1) # densify adds additional points to traj, can help mitigate inconsistent sampling and other issues
